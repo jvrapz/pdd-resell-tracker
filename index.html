@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#172554">
+<meta name="description" content="Personal PDD reseller inventory, purchases, stock, and sales tracker.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+
+<title>PDD Reseller Inventory Tracker</title>
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--ink:#172033;--muted:#68738a;--line:#e5e9f2;--accent:#315efb;--green:#12805c;--red:#c44747;--amber:#a56812}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--ink)}
+header{background:#172554;color:white;padding:22px max(18px,calc((100% - 1200px)/2));}
+header h1{margin:0;font-size:23px}header p{margin:5px 0 0;color:#dbe4ff;font-size:13px}
+main{max-width:1200px;margin:22px auto;padding:0 16px 40px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}
+.card,.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 2px 8px #1a2b4a08}
+.metric-label{color:var(--muted);font-size:12px}.metric{font-size:24px;font-weight:750;margin-top:5px;letter-spacing:-.5px}.sub{color:var(--muted);font-size:11px;margin-top:3px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.tab,button{border:0;border-radius:9px;padding:10px 14px;font-weight:650;cursor:pointer;font-size:13px}
+.tab{background:#e8ecf5;color:#34405a}.tab.active,button.primary{background:var(--accent);color:white}
+button.secondary{background:#edf1fa;color:#26334e}button.danger{background:#fff0f0;color:var(--red)}button.small{padding:6px 9px;font-size:12px}
+.panel h2{font-size:17px;margin:0 0 14px}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}.field.wide{grid-column:span 2}.field label{font-size:12px;color:var(--muted);font-weight:650}
+input,textarea,select{width:100%;border:1px solid #d9dfeb;border-radius:8px;padding:10px 11px;font:inherit;background:white;color:var(--ink);min-width:0}
+input:focus,textarea:focus,select:focus{outline:2px solid #cbd6ff;border-color:var(--accent)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.hint{font-size:12px;color:var(--muted);margin:10px 0 0}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:12px}.toolbar input{max-width:320px}.toolbar select{max-width:180px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:950px;background:white}th,td{text-align:left;padding:10px 11px;border-bottom:1px solid var(--line);font-size:12px;white-space:nowrap}th{background:#f7f8fc;color:#59657b;font-weight:700;position:sticky;top:0}tr:last-child td{border-bottom:0}
+.item-name{font-weight:700;font-size:13px}.muted{color:var(--muted)}.positive{color:var(--green);font-weight:700}.negative{color:var(--red);font-weight:700}
+.pill{display:inline-block;border-radius:99px;padding:3px 8px;background:#edf1fa;color:#45516a;font-size:11px}.pill.low{background:#fff3dd;color:var(--amber)}
+.hidden{display:none!important}.empty{text-align:center;padding:30px;color:var(--muted)}
+.sale-row{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;align-items:end}
+footer{color:var(--muted);font-size:11px;text-align:center;margin:18px 0}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){header{padding:18px}header h1{font-size:20px}.cards{gap:8px}.card{padding:12px}.metric{font-size:20px}.grid{grid-template-columns:1fr}.field.wide{grid-column:span 1}.sale-row{grid-template-columns:1fr}.toolbar input{max-width:none;flex:1}}
+</style>
+</head>
+<body>
+<header><h1>📦 PDD Reseller Tracker</h1><p>Track purchases, delivery estimates, stock, sales, capital, and possible profit — all in one place.</p></header>
+<main>
+<section class="cards">
+ <div class="card"><div class="metric-label">Total purchase capital</div><div class="metric" id="capital">₱0.00</div><div class="sub">Item costs + extra costs</div></div>
+ <div class="card"><div class="metric-label">Possible profit if all stock sells</div><div class="metric" id="possibleProfit">₱0.00</div><div class="sub">Based on your planned selling prices</div></div>
+ <div class="card"><div class="metric-label">Current stock value</div><div class="metric" id="stockValue">₱0.00</div><div class="sub">Cost value of unsold items</div></div>
+ <div class="card"><div class="metric-label">Sales revenue recorded</div><div class="metric" id="revenue">₱0.00</div><div class="sub">From sales entered in this app</div></div>
+</section>
+<section class="cards">
+ <div class="card"><div class="metric-label">Items / product entries</div><div class="metric" id="itemCount">0</div></div>
+ <div class="card"><div class="metric-label">Units purchased</div><div class="metric" id="unitsBought">0</div></div>
+ <div class="card"><div class="metric-label">Units sold</div><div class="metric" id="unitsSold">0</div></div>
+ <div class="card"><div class="metric-label">Units remaining</div><div class="metric" id="unitsLeft">0</div></div>
+</section>
+<nav class="tabs">
+ <button class="tab active" data-tab="inventory">Inventory & Sales</button>
+ <button class="tab" data-tab="add">＋ Add Item</button>
+ <button class="tab" data-tab="records">Sales Records</button>
+ <button class="tab" data-tab="backup">Backup / Export</button>
+</nav>
+
+<section id="inventory" class="panel">
+ <h2>My inventory</h2>
+ <div class="toolbar">
+  <input id="search" placeholder="Search item name..." aria-label="Search item name">
+  <select id="filter"><option value="all">All items</option><option value="stock">In stock</option><option value="low">Low stock (1–3)</option><option value="out">Out of stock</option></select>
+  <button class="secondary" id="csvBtn">Export inventory CSV</button>
+ </div>
+ <div class="table-wrap"><table><thead><tr><th>Item</th><th>Purchased</th><th>Sold</th><th>In stock</th><th>Unit cost</th><th>Selling price</th><th>Possible profit*</th><th>Order date</th><th>Expected delivery</th><th>Actions</th></tr></thead><tbody id="inventoryBody"></tbody></table></div>
+ <p class="hint">*Possible profit is calculated for the remaining stock, after allocating extra costs across the units. Use “Record sale” whenever an item sells; stock and profit update automatically.</p>
+ <div id="emptyInventory" class="empty">No items yet. Select <b>＋ Add Item</b> to record your first PDD order.</div>
+</section>
+
+<section id="add" class="panel hidden">
+ <h2 id="formTitle">Add a PDD item</h2>
+ <form id="itemForm">
+  <input type="hidden" id="editId">
+  <div class="grid">
+   <div class="field wide"><label for="name">Item name *</label><input id="name" required placeholder="e.g. Korean hair clips – 10 pcs"></div>
+   <div class="field"><label for="unitCost">Purchase value per unit (₱) *</label><input id="unitCost" type="number" min="0" step=".01" required placeholder="e.g. 35"></div>
+   <div class="field"><label for="qty">Quantity bought *</label><input id="qty" type="number" min="1" step="1" required placeholder="e.g. 10"></div>
+   <div class="field"><label for="sellPrice">Planned selling price per unit (₱) *</label><input id="sellPrice" type="number" min="0" step=".01" required placeholder="e.g. 79"></div>
+   <div class="field"><label for="extraCost">Extra costs for this order (₱)</label><input id="extraCost" type="number" min="0" step=".01" value="0" placeholder="Shipping / local fees"></div>
+   <div class="field"><label for="orderDate">Date ordered</label><input id="orderDate" type="date"></div>
+   <div class="field"><label for="deliveryDate">Expected delivery date (automatic +30 days)</label><input id="deliveryDate" type="date" readonly><span class="hint">Automatically calculated from the order date.</span></div>
+   <div class="field"><label for="status">Order status</label><select id="status"><option>Ordered</option><option>In transit</option><option>Delivered</option><option>Cancelled</option></select></div>
+   <div class="field wide"><label for="notes">Notes (optional)</label><input id="notes" placeholder="PDD order number, color/size, supplier, etc."></div>
+  </div>
+  <p class="hint">Purchase value is the cost of one sellable unit. Extra costs are the total additional expense for this item/order and are spread across the quantity.</p>
+  <div class="actions"><button class="primary" type="submit" id="saveBtn">Save item</button><button class="secondary" type="button" id="cancelEdit">Clear / Cancel</button></div>
+ </form>
+</section>
+
+<section id="records" class="panel hidden">
+ <h2>Sales records</h2>
+ <div class="table-wrap"><table style="min-width:700px"><thead><tr><th>Date sold</th><th>Item</th><th>Quantity</th><th>Price per unit</th><th>Sales revenue</th><th>Estimated profit</th></tr></thead><tbody id="salesBody"></tbody></table></div>
+ <div id="emptySales" class="empty">No sales recorded yet.</div>
+</section>
+
+<section id="backup" class="panel hidden">
+ <h2>Backup, restore, and export</h2>
+ <p>Keep a backup so you can move your records to another browser or computer. Your data is saved in this browser on this device.</p>
+ <div class="actions">
+  <button class="primary" id="backupBtn">Download full backup (JSON)</button>
+  <button class="secondary" id="restoreBtn">Restore backup</button>
+  <input type="file" id="restoreFile" accept=".json,application/json" class="hidden">
+  <button class="secondary" id="salesCsvBtn">Export sales CSV</button>
+ </div>
+ <p class="hint">Important: browser data can be lost if you clear browser data, use a different browser, or change devices. Download a backup regularly. To use on your phone, open this same HTML file in a browser and restore the same backup there; records do not sync automatically between devices.</p>
+</section>
+<footer>Personal inventory tool · Amounts are in Philippine pesos (₱) · Data stays in your browser unless you export it.</footer>
+</main>
+<script>
+const KEY='pdd_reseller_tracker_v1';
+let items=[], sales=[];
+const $=id=>document.getElementById(id);
+const money=n=>'₱'+(Number(n)||0).toLocaleString('en-PH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const num=n=>Number(n)||0;
+const today=()=>new Date().toISOString().slice(0,10);
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||'{}');items=Array.isArray(d.items)?d.items:[];sales=Array.isArray(d.sales)?d.sales:[]}catch(e){items=[];sales=[]}}
+function save(){localStorage.setItem(KEY,JSON.stringify({items,sales}));render()}
+function costPerUnit(i){return num(i.unitCost)+(num(i.extraCost)/Math.max(1,num(i.qty)))}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+ const bought=items.reduce((s,i)=>s+num(i.qty),0), sold=items.reduce((s,i)=>s+num(i.sold),0), left=items.reduce((s,i)=>s+Math.max(0,num(i.qty)-num(i.sold)),0);
+ const capital=items.reduce((s,i)=>s+num(i.unitCost)*num(i.qty)+num(i.extraCost),0);
+ const stockValue=items.reduce((s,i)=>s+Math.max(0,num(i.qty)-num(i.sold))*costPerUnit(i),0);
+ const possible=items.reduce((s,i)=>s+(num(i.sellPrice)-costPerUnit(i))*num(i.qty),0);
+ const revenue=sales.reduce((s,x)=>s+num(x.qty)*num(x.price),0);
+ $('capital').textContent=money(capital);$('possibleProfit').textContent=money(possible);$('stockValue').textContent=money(stockValue);$('revenue').textContent=money(revenue);
+ $('itemCount').textContent=items.length;$('unitsBought').textContent=bought;$('unitsSold').textContent=sold;$('unitsLeft').textContent=left;
+ const q=$('search').value.toLowerCase(), f=$('filter').value;
+ const filtered=items.filter(i=>i.name.toLowerCase().includes(q)).filter(i=>{let n=Math.max(0,num(i.qty)-num(i.sold));return f==='all'||(f==='stock'&&n>0)||(f==='low'&&n>0&&n<=3)||(f==='out'&&n===0)});
+ $('inventoryBody').innerHTML=filtered.map(i=>{let remaining=Math.max(0,num(i.qty)-num(i.sold)),p=(num(i.sellPrice)-costPerUnit(i))*remaining;return `<tr>
+ <td><div class="item-name">${esc(i.name)}</div><div class="muted">${esc(i.notes||'')}</div><span class="pill">${esc(i.status||'Ordered')}</span></td>
+ <td>${num(i.qty)}</td><td>${num(i.sold)}</td><td><b>${remaining}</b> ${remaining<=3&&remaining>0?'<span class="pill low">Low</span>':''}</td>
+ <td>${money(i.unitCost)}</td><td>${money(i.sellPrice)}</td><td class="${p>=0?'positive':'negative'}">${money(p)}</td>
+ <td>${esc(i.orderDate||'—')}</td><td>${esc(i.deliveryDate||'—')}</td>
+ <td><div style="display:flex;gap:5px"><button class="small primary" onclick="recordSale('${i.id}')">Record sale</button><button class="small secondary" onclick="editItem('${i.id}')">Edit</button><button class="small danger" onclick="deleteItem('${i.id}')">×</button></div></td></tr>`}).join('');
+ $('emptyInventory').classList.toggle('hidden',filtered.length>0);
+ $('salesBody').innerHTML=sales.slice().reverse().map(s=>`<tr><td>${esc(s.date)}</td><td>${esc(s.itemName)}</td><td>${s.qty}</td><td>${money(s.price)}</td><td>${money(s.qty*s.price)}</td><td class="positive">${money(s.profit)}</td></tr>`).join('');
+ $('emptySales').classList.toggle('hidden',sales.length>0);
+}
+function switchTab(tab){document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));['inventory','add','records','backup'].forEach(id=>$(id).classList.toggle('hidden',id!==tab));}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+function addDays(dateString,days){if(!dateString)return '';const d=new Date(dateString+'T12:00:00');d.setDate(d.getDate()+days);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}\nfunction updateDeliveryDate(){$('deliveryDate').value=addDays($('orderDate').value,30)}\nfunction clearForm(){$('itemForm').reset();$('editId').value='';$('extraCost').value='0';$('orderDate').value=today();updateDeliveryDate();$('formTitle').textContent='Add a PDD item';$('saveBtn').textContent='Save item'}
+$('itemForm').addEventListener('submit',e=>{e.preventDefault();const id=$('editId').value;const old=items.find(x=>x.id===id);const obj={id:id||String(Date.now())+'_'+Math.random().toString(36).slice(2,7),name:$('name').value.trim(),unitCost:num($('unitCost').value),qty:num($('qty').value),sold:old?num(old.sold):0,sellPrice:num($('sellPrice').value),extraCost:num($('extraCost').value),orderDate:$('orderDate').value,deliveryDate:$('deliveryDate').value,status:$('status').value,notes:$('notes').value.trim()};if(old)items=items.map(x=>x.id===id?obj:x);else items.push(obj);save();clearForm();switchTab('inventory')});
+$('cancelEdit').onclick=()=>{clearForm();switchTab('inventory')};\n$('orderDate').addEventListener('change',updateDeliveryDate);
+window.editItem=id=>{const i=items.find(x=>x.id===id);if(!i)return;$('editId').value=i.id;$('name').value=i.name;$('unitCost').value=i.unitCost;$('qty').value=i.qty;$('sellPrice').value=i.sellPrice;$('extraCost').value=i.extraCost;$('orderDate').value=i.orderDate||'';$('deliveryDate').value=addDays(i.orderDate||'',30);$('status').value=i.status||'Ordered';$('notes').value=i.notes||'';$('formTitle').textContent='Edit item';$('saveBtn').textContent='Update item';switchTab('add')};
+window.deleteItem=id=>{const i=items.find(x=>x.id===id);if(!i)return;if(confirm('Delete '+i.name+'? Sales records already made will remain in Sales Records.')){items=items.filter(x=>x.id!==id);save()}};
+window.recordSale=id=>{const i=items.find(x=>x.id===id);if(!i)return;const remaining=num(i.qty)-num(i.sold);if(remaining<=0){alert('No stock remaining for this item.');return}const q=prompt(`How many "${i.name}" were sold? Available: ${remaining}`, '1');if(q===null)return;const qty=Number(q);if(!Number.isInteger(qty)||qty<1||qty>remaining){alert('Enter a whole number from 1 to '+remaining+'.');return}const p=prompt('Actual selling price per unit (₱):',String(i.sellPrice));if(p===null)return;const price=Number(p);if(!Number.isFinite(price)||price<0){alert('Enter a valid selling price.');return}const profit=(price-costPerUnit(i))*qty;i.sold=num(i.sold)+qty;sales.push({id:String(Date.now()),itemId:i.id,itemName:i.name,qty,price,profit,date:today()});save()};
+$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();URL.revokeObjectURL(url)}
+$('backupBtn').onclick=()=>download('pdd-reseller-backup-'+today()+'.json',JSON.stringify({items,sales},null,2),'application/json');
+$('restoreBtn').onclick=()=>$('restoreFile').click();
+$('restoreFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());if(!Array.isArray(d.items)||!Array.isArray(d.sales))throw Error('Invalid backup');if(confirm('Restore this backup? This will replace the records currently saved in this browser.')){items=d.items;sales=d.sales;save();alert('Backup restored.')}}catch(err){alert('Could not restore. Please choose a valid backup JSON file.')}e.target.value=''};
+function csv(rows){return rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n')}
+$('csvBtn').onclick=()=>{const rows=[['Item','Purchased qty','Sold qty','Remaining','Unit cost','Extra costs','Selling price','Possible profit on remaining stock','Order date','Expected delivery','Status','Notes'],...items.map(i=>[i.name,i.qty,i.sold,num(i.qty)-num(i.sold),i.unitCost,i.extraCost,i.sellPrice,(i.sellPrice-costPerUnit(i))*(i.qty-i.sold),i.orderDate,i.deliveryDate,i.status,i.notes])];download('pdd-inventory-'+today()+'.csv',csv(rows),'text/csv;charset=utf-8')};
+$('salesCsvBtn').onclick=()=>{const rows=[['Date','Item','Quantity','Selling price per unit','Revenue','Estimated profit'],...sales.map(s=>[s.date,s.itemName,s.qty,s.price,s.qty*s.price,s.profit])];download('pdd-sales-'+today()+'.csv',csv(rows),'text/csv;charset=utf-8')};
+load();clearForm();render();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err => console.error('Service worker registration failed:', err));
+  });
+}
+</script>
+</body></html>
